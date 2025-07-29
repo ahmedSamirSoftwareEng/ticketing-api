@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('message');
-            $table->enum('status', ['Pending', 'In Progress', 'Closed'])->default('Pending');
+            $table->tinyInteger('status')->default(0);
             $table->timestamps();
         });
     }

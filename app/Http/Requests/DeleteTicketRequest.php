@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Enums\TicketStatus;
 
 class DeleteTicketRequest extends FormRequest
 {
@@ -11,9 +12,14 @@ class DeleteTicketRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        $user = $this->user();
         $ticket = $this->route('ticket');
-        return $this->user()->id === $ticket->user_id
-            && $ticket->status === 'Pending';
+
+        if ($user->is_admin) {
+            return  $ticket->status === TicketStatus::Pending;
+        }
+
+        return $user->id === $ticket->user_id && $ticket->status === TicketStatus::Pending;
     }
 
     public function rules(): array

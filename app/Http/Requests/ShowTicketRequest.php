@@ -11,13 +11,12 @@ class ShowTicketRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        $user = $this->user();
+        if ($user->is_admin) {
+            return true;
+        }
         $ticket = $this->route('ticket');
-        return $this->user()->id === $ticket->user_id
-            || $this->user()->is_admin;
-    }
 
-    public function rules(): array
-    {
-        return [];
+        return $user->id === $ticket->user_id;
     }
 }

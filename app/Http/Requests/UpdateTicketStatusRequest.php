@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Enums\TicketStatus;
 
 class UpdateTicketStatusRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class UpdateTicketStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'in:In Progress,Closed'],
+            'status' => ['required', Rule::enum(TicketStatus::class)],
         ];
     }
 }

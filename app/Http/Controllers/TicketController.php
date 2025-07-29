@@ -10,25 +10,25 @@ use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\ShowTicketRequest;
 use App\Http\Requests\DeleteTicketRequest;
 use App\Http\Requests\UpdateTicketStatusRequest;
+use App\Http\Resources\TicketResource;
+use App\Traits\ApiResponse;
+use Symfony\Component\HttpFoundation\Response;
+use App\Services\TicketService;
 
 class TicketController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum');
-    }
+    use ApiResponse;
+
+    public function __construct(
+        private TicketService $ticketService
+    ) {}
     /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
-        $user = Auth::user();
-
-        $tickets = $user->is_admin
-            ? Ticket::with('user')->get()
-            : $user->tickets;
-
-        return response()->json($tickets);
+        $tickets = $this->ticketService->get(Auth::id());
+        return $this->successResponse(TicketResource::collection($tickets));
     }
 
     /**
@@ -36,11 +36,8 @@ class TicketController extends Controller
      */
     public function store(StoreTicketRequest  $request): JsonResponse
     {
-        $ticket = $request->user()
-            ->tickets()
-            ->create($request->validated());
-
-        return response()->json($ticket, 201);
+        $ticket =  $this->ticketService->create($request->validated());
+        return $this->successResponse(TicketResource::make($ticket->refresh() ), code: Response::HTTP_CREATED);
     }
 
     /**
@@ -48,15 +45,8 @@ class TicketController extends Controller
      */
     public function show(ShowTicketRequest $request, Ticket $ticket): JsonResponse
     {
-        return response()->json($ticket);
-    }
-
-    public function updateStatus(
-        UpdateTicketStatusRequest $request,
-        Ticket $ticket
-    ): JsonResponse {
-        $ticket->update($request->validated());
-        return response()->json($ticket);
+        $ticket = $this->ticketService->show($ticket->id, Auth::id());
+        return $this->successResponse(TicketResource::make($ticket));
     }
 
     /**
@@ -64,7 +54,7 @@ class TicketController extends Controller
      */
     public function destroy(DeleteTicketRequest $request, Ticket $ticket): JsonResponse
     {
-        $ticket->delete();
-        return response()->json(null, 204);
+        $this->ticketService->delete($ticket);
+        return $this->successResponse(null, code: Response::HTTP_NO_CONTENT);
     }
 }
